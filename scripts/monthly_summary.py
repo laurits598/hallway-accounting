@@ -6,13 +6,14 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.backend.accounting import (
-    fetch_sheet_data,
     get_bluebook_summary,
     get_kaffeklub_costs,
     get_purchases_for_month,
     get_resident_costs,
     print_monthly_summary,
 )
+from app.backend.google_sheets import fetch_first_available_sheet_data
+from app.backend.server import _foodclub_sheet_names
 
 
 MONTH = 6
@@ -49,15 +50,11 @@ ENGLISH_MONTHS = {
 }
 
 
-def accounting_summary():
-    month = MONTH
-    year = YEAR
-
-    foodclub_sheet = f"Foodclub - {DANISH_MONTHS[month]} {year}"
+def accounting_summary(month=MONTH, year=YEAR):
     bluebook_sheet = f"{ENGLISH_MONTHS[month]} {year} - Blue Book"
 
-    foodclub_data = fetch_sheet_data(foodclub_sheet)
-    bluebook_data = fetch_sheet_data(bluebook_sheet)
+    foodclub_data = fetch_first_available_sheet_data(_foodclub_sheet_names(month, year))
+    bluebook_data = fetch_first_available_sheet_data([bluebook_sheet])
 
     accounting_foodclub = get_resident_costs(foodclub_data, include_kaffeklub=False)
     accounting_kaffeklub = get_kaffeklub_costs(foodclub_data)
@@ -73,8 +70,8 @@ def accounting_summary():
     )
 
 
-def main():
-    accounting_summary()
+def main(month=MONTH, year=YEAR):
+    accounting_summary(month, year)
 
 
 if __name__ == "__main__":

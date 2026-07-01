@@ -22,13 +22,21 @@ def run_test():
     sheet_handler.main()
 
     # Do accounting summary for the current month
-    monthly_summary.main()
+    monthly_summary.main(monthly_summary.MONTH, monthly_summary.YEAR)
 
     # Generate the next small teddy month schedule
     generate_next_small_teddy_month()
 
-    # Notify registered residents about the accounting month used by this test.
-    delivery = send_monthly_balances(monthly_summary.MONTH, monthly_summary.YEAR)
+    send_balance_notifications(monthly_summary.MONTH, monthly_summary.YEAR)
+
+
+def run_monthly_accounting(month, year):
+    monthly_summary.main(month, year)
+    send_balance_notifications(month, year)
+
+
+def send_balance_notifications(month, year):
+    delivery = send_monthly_balances(month, year)
     print(
         f"Telegram balances: {delivery['sent']} sent, "
         f"{delivery['failed']} failed."
@@ -50,19 +58,31 @@ def reset_test():
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="Run or reset the July 2026 monthly test workflow.")
+    parser = argparse.ArgumentParser(description="Run monthly accounting or the July 2026 test workflow.")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--test", action="store_true", help="generate sheets, summary, and Small Teddy schedule")
     mode.add_argument("--reset", action="store_true", help="delete generated July 2026 sheets and Small Teddy rows")
-    return parser.parse_args(argv)
+    mode.add_argument("--month", type=int, metavar="1-12", help="summarize and notify for this month")
+    parser.add_argument("--year", type=int, help="year used with --month")
+    args = parser.parse_args(argv)
+    if args.month is not None:
+        if not 1 <= args.month <= 12:
+            parser.error("--month must be between 1 and 12")
+        if args.year is None:
+            parser.error("--year is required with --month")
+    elif args.year is not None:
+        parser.error("--year can only be used with --month")
+    return args
 
 
 def main(argv=None):
     args = parse_args(argv)
     if args.test:
         run_test()
-    else:
+    elif args.reset:
         reset_test()
+    else:
+        run_monthly_accounting(args.month, args.year)
 
 if __name__ == "__main__":
     main()

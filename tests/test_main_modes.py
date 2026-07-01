@@ -12,10 +12,16 @@ class MainModesTest(unittest.TestCase):
     def test_modes_are_mutually_exclusive_and_required(self):
         self.assertTrue(main.parse_args(["--test"]).test)
         self.assertTrue(main.parse_args(["--reset"]).reset)
+        selected = main.parse_args(["--month", "2", "--year", "2026"])
+        self.assertEqual((selected.month, selected.year), (2, 2026))
         with self.assertRaises(SystemExit):
             main.parse_args([])
         with self.assertRaises(SystemExit):
             main.parse_args(["--test", "--reset"])
+        with self.assertRaises(SystemExit):
+            main.parse_args(["--month", "13", "--year", "2026"])
+        with self.assertRaises(SystemExit):
+            main.parse_args(["--month", "2"])
 
     @patch.object(main, "clear_small_teddy_month", return_value=31)
     @patch.object(main.sheet_handler, "delete_month_sheets", return_value=["Foodclub - July 2026"])
@@ -33,9 +39,16 @@ class MainModesTest(unittest.TestCase):
     ):
         main.main(["--test"])
         generate_sheets.assert_called_once_with()
-        accounting.assert_called_once_with()
+        accounting.assert_called_once_with(main.monthly_summary.MONTH, main.monthly_summary.YEAR)
         generate_teddy.assert_called_once_with()
         send_balances.assert_called_once_with(main.monthly_summary.MONTH, main.monthly_summary.YEAR)
+
+    @patch.object(main, "send_monthly_balances", return_value={"sent": 1, "failed": 0, "errors": []})
+    @patch.object(main.monthly_summary, "main")
+    def test_month_mode_summarizes_and_broadcasts_selected_month(self, accounting, send_balances):
+        main.main(["--month", "2", "--year", "2026"])
+        accounting.assert_called_once_with(2, 2026)
+        send_balances.assert_called_once_with(2, 2026)
 
 
 class ClearSmallTeddyMonthTest(unittest.TestCase):
