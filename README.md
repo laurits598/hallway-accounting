@@ -150,6 +150,15 @@ ask “how much do I owe?” The bot reports Foodclub, Blue Book, kiosk, and tot
 for the current month. Registrations are stored locally in the Git-ignored
 `data/telegram_users.json` file.
 
+Registered residents can also add an expense to the first free slot in their
+row of the current month's Blue Book sheet:
+
+```text
+/bluebook Flour and oil | 123.45
+```
+
+Sending `/bluebook` without arguments displays the expected format.
+
 Useful service commands:
 
 ```bash
@@ -228,6 +237,14 @@ Import the downloaded Foodclub CSV files with:
 
 ```bash
 python3 scripts/import_foodclubs.py
+```
+
+Historical kiosk XLSX exports in `data/historical_kiosk/` are imported by
+`install.sh`. The importer skips any month that already contains purchases, so
+it is safe to rerun manually:
+
+```bash
+.venv/bin/python scripts/import_historical_kiosk.py
 ```
 
 Each month is replaced transactionally when reimported, so rerunning the command does not duplicate data.

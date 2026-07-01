@@ -17,6 +17,12 @@ class TelegramBotTest(unittest.TestCase):
         self.assertEqual(telegram_bot.normalize_room("29"), "529")
         self.assertEqual(telegram_bot.normalize_room("529"), "529")
 
+    def test_parses_bluebook_description_and_comma_amount(self):
+        self.assertEqual(
+            telegram_bot.parse_bluebook_args(["Flour", "and", "oil", "|", "123,45"]),
+            ("Flour and oil", 123.45),
+        )
+
     def test_registration_is_persisted_by_telegram_user(self):
         with tempfile.TemporaryDirectory() as directory:
             registrations = Path(directory) / "telegram_users.json"

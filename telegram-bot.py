@@ -4,11 +4,13 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 
 from app.backend.server import build_accounting_summary
+from app.backend.google_sheets import insert_bluebook_expense
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -124,6 +126,55 @@ async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+def parse_bluebook_args(args):
+    raw = " ".join(args).strip()
+    if "|" not in raw:
+        raise ValueError("Use: /bluebook Description | 123.45")
+    description, amount_raw = (part.strip() for part in raw.rsplit("|", 1))
+    if not description:
+        raise ValueError("Description cannot be empty.")
+    if len(description) > 200:
+        raise ValueError("Description must be at most 200 characters.")
+    try:
+        amount = round(float(amount_raw.replace(",", ".")), 2)
+    except ValueError as exc:
+        raise ValueError("Amount must be a number, for example 123.45.") from exc
+    if amount <= 0 or amount > 100000:
+        raise ValueError("Amount must be greater than 0 and at most 100000.")
+    return description, amount
+
+
+async def bluebook(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    room = load_registrations().get(str(update.effective_user.id))
+    if not room:
+        await update.effective_message.reply_text("Register your room first: /register 529")
+        return
+    if not context.args:
+        await update.effective_message.reply_text(
+            "Send the expense like this:\n"
+            "/bluebook Description | Amount\n\n"
+            "Example:\n/bluebook Flour and oil | 123.45"
+        )
+        return
+
+    try:
+        description, amount = parse_bluebook_args(context.args)
+        today = datetime.now(ZoneInfo("Europe/Copenhagen")).date()
+        result = await asyncio.to_thread(
+            insert_bluebook_expense, room, description, amount, today
+        )
+    except Exception as exc:
+        print(f"[TELEGRAM] Blue Book insert failed: {exc}")
+        await update.effective_message.reply_text(f"Could not add the expense: {exc}")
+        return
+
+    receipt = "\nRemember to put the receipt in the folder." if amount > 200 else ""
+    await update.effective_message.reply_text(
+        f"Added to {result['sheet']}:\n"
+        f"{description}: {amount:.2f} kr. (slot {result['slot']}){receipt}"
+    )
+
+
 async def text_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (update.effective_message.text or "").casefold()
     if any(word in text for word in ("owe", "balance", "skylder", "saldo")):
@@ -137,6 +188,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("register", register))
     application.add_handler(CommandHandler(["owe", "balance"], balance))
+    application.add_handler(CommandHandler("bluebook", bluebook))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_question))
     application.run_polling()
 

@@ -113,6 +113,9 @@ else
     run_as_service_user "${VENV_DIR}/bin/python" "${PROJECT_DIR}/scripts/setup_db.py"
 fi
 
+echo "Importing missing historical kiosk months"
+run_as_service_user "${VENV_DIR}/bin/python" "${PROJECT_DIR}/scripts/import_historical_kiosk.py"
+
 UNIT_FILE="$(mktemp)"
 BOT_UNIT_FILE="$(mktemp)"
 trap 'rm -f "${UNIT_FILE}" "${BOT_UNIT_FILE}"' EXIT
