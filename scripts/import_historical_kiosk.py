@@ -28,23 +28,28 @@ def read_export(path):
         raise ValueError(f"Unsupported historical kiosk filename: {path.name}")
     month, year = map(int, match.groups())
 
-    worksheet = load_workbook(path, read_only=True, data_only=True).active
-    header = [str(value or "").strip().casefold() for value in next(worksheet.iter_rows(values_only=True))]
-    if header[:3] != ["name", "room", "total"]:
-        raise ValueError(f"Unexpected columns in {path.name}; expected name, room, total")
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    try:
+        worksheet = workbook.active
+        header = [str(value or "").strip().casefold() for value in next(worksheet.iter_rows(values_only=True))]
+        if header[:3] != ["name", "room", "total"]:
+            raise ValueError(f"Unexpected columns in {path.name}; expected name, room, total")
 
-    totals = []
-    for row_number, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
-        if not any(value is not None for value in row):
-            continue
-        room = str(row[1] or "").strip()
-        if not room:
-            raise ValueError(f"Missing room in {path.name}, row {row_number}")
-        try:
-            total = round(float(row[2]), 2)
-        except (TypeError, ValueError) as exc:
-            raise ValueError(f"Invalid total in {path.name}, row {row_number}") from exc
-        totals.append((room, total))
+        totals = []
+        for row_number, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
+            if not any(value is not None for value in row):
+                continue
+            name = str(row[0] or "").strip() or f"Historical resident {row_number}"
+            room = str(row[1] or "").strip()
+            if not room:
+                raise ValueError(f"Missing room in {path.name}, row {row_number}")
+            try:
+                total = round(float(row[2]), 2)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Invalid total in {path.name}, row {row_number}") from exc
+            totals.append((name, room, total))
+    finally:
+        workbook.close()
     return month, year, totals
 
 
@@ -71,13 +76,22 @@ def import_export(connection, path):
 
     timestamp = f"{year:04d}-{month:02d}-01T12:00:00"
     inserted = 0
-    for room, total in totals:
+    for name, room, total in totals:
         resident = connection.execute(
             "SELECT rid FROM residents WHERE room = ? ORDER BY active DESC, rid DESC LIMIT 1",
             (room,),
         ).fetchone()
         if resident is None:
-            raise ValueError(f"No resident found for room {room} while importing {path.name}")
+            historical_name = name
+            if connection.execute(
+                "SELECT 1 FROM residents WHERE name = ?", (historical_name,)
+            ).fetchone():
+                historical_name = f"{name} (historical room {room})"
+            cursor = connection.execute(
+                "INSERT INTO residents (name, room, active) VALUES (?, ?, 0)",
+                (historical_name, room),
+            )
+            resident = (cursor.lastrowid,)
         connection.execute(
             """
             INSERT INTO purchases (product_id, resident_id, quantity, price, timestamp)

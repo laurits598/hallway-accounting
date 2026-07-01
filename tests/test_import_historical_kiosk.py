@@ -59,6 +59,47 @@ class HistoricalKioskImportTest(unittest.TestCase):
             self.assertAlmostEqual(total, 32.75)
             self.assertEqual(product, (HISTORICAL_PRODUCT, 0))
 
+    def test_creates_missing_historical_resident_as_inactive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            db_path = root / "test.db"
+            input_dir = root / "historical_kiosk"
+            input_dir.mkdir()
+
+            connection = sqlite3.connect(db_path)
+            connection.executescript(
+                """
+                CREATE TABLE products (
+                    id INTEGER PRIMARY KEY, name TEXT UNIQUE, retail_price REAL,
+                    price REAL, image TEXT, active BOOLEAN
+                );
+                CREATE TABLE residents (
+                    rid INTEGER PRIMARY KEY, name TEXT UNIQUE, room TEXT, active BOOLEAN
+                );
+                CREATE TABLE purchases (
+                    id INTEGER PRIMARY KEY, product_id INTEGER, resident_id INTEGER,
+                    quantity INTEGER, price REAL, timestamp TEXT
+                );
+                INSERT INTO residents (name, room, active) VALUES ('Oliver', '543', 1);
+                """
+            )
+            connection.commit()
+            connection.close()
+
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.append(["name", "room", "total"])
+            sheet.append(["Oliver", "547", "6.50"])
+            workbook.save(input_dir / "12_1_2024_12_31_2024.xlsx")
+
+            import_directory(db_path, input_dir)
+            connection = sqlite3.connect(db_path)
+            resident = connection.execute(
+                "SELECT name, room, active FROM residents WHERE room = '547'"
+            ).fetchone()
+            connection.close()
+            self.assertEqual(resident, ("Oliver (historical room 547)", "547", 0))
+
 
 if __name__ == "__main__":
     unittest.main()
