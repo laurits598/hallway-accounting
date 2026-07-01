@@ -2,12 +2,15 @@
 set -Eeuo pipefail
 
 SERVICE_NAME="kollegianeren"
+BOT_SERVICE_NAME="kollegianeren-telegram"
 PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 VENV_DIR="${PROJECT_DIR}/.venv"
 DB_PATH="${PROJECT_DIR}/kollegianeren.db"
 CLIENT_SECRET="${PROJECT_DIR}/app/backend/client_secret.json"
 TOKEN_FILE="${PROJECT_DIR}/app/backend/token.json"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+BOT_SERVICE_FILE="/etc/systemd/system/${BOT_SERVICE_NAME}.service"
+BOT_TOKEN_FILE="${PROJECT_DIR}/app/backend/telegram_bot_token.txt"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 PORT="${KOLLEGIANEREN_PORT:-8080}"
 
@@ -111,7 +114,8 @@ else
 fi
 
 UNIT_FILE="$(mktemp)"
-trap 'rm -f "${UNIT_FILE}"' EXIT
+BOT_UNIT_FILE="$(mktemp)"
+trap 'rm -f "${UNIT_FILE}" "${BOT_UNIT_FILE}"' EXIT
 
 cat >"${UNIT_FILE}" <<EOF
 [Unit]
@@ -143,8 +147,43 @@ sudo install -o root -g root -m 0644 "${UNIT_FILE}" "${SERVICE_FILE}"
 sudo systemctl daemon-reload
 sudo systemctl enable --now "${SERVICE_NAME}.service"
 
+if [[ -f "${BOT_TOKEN_FILE}" ]]; then
+    cat >"${BOT_UNIT_FILE}" <<EOF
+[Unit]
+Description=Kollegianeren Telegram bot
+Wants=network-online.target
+After=network-online.target ${SERVICE_NAME}.service
+
+[Service]
+Type=simple
+User=${SERVICE_USER}
+Group=${SERVICE_GROUP}
+WorkingDirectory=${PROJECT_DIR}
+ExecStart=${VENV_DIR}/bin/python ${PROJECT_DIR}/telegram-bot.py
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    echo "Installing systemd service ${BOT_SERVICE_NAME}.service"
+    sudo install -o root -g root -m 0644 "${BOT_UNIT_FILE}" "${BOT_SERVICE_FILE}"
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now "${BOT_SERVICE_NAME}.service"
+else
+    echo "No Telegram token found at ${BOT_TOKEN_FILE}; Telegram service was not installed."
+fi
+
 echo
 echo "Kollegianeren is installed and running on port ${PORT}."
 echo "Status: sudo systemctl status ${SERVICE_NAME}"
 echo "Logs:   journalctl -u ${SERVICE_NAME} -f"
 echo "Site:   http://localhost:${PORT}/system"
+if [[ -f "${BOT_TOKEN_FILE}" ]]; then
+    echo "Bot:    sudo systemctl status ${BOT_SERVICE_NAME}"
+fi

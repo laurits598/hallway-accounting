@@ -37,6 +37,9 @@ for command in ssh scp; do
 done
 
 CREDENTIAL_FILES=(client_secret.json token.json)
+if [[ -r "${SOURCE_DIR}/telegram_bot_token.txt" ]]; then
+    CREDENTIAL_FILES+=(telegram_bot_token.txt)
+fi
 for file in "${CREDENTIAL_FILES[@]}"; do
     if [[ ! -r "${SOURCE_DIR}/${file}" ]]; then
         echo "Missing credential file: ${SOURCE_DIR}/${file}" >&2
@@ -47,14 +50,15 @@ done
 echo "Creating ${REMOTE_CREDENTIAL_DIR} on ${REMOTE_HOST}"
 ssh "${REMOTE_HOST}" mkdir -p -- "${REMOTE_CREDENTIAL_DIR}"
 
-echo "Copying Google credentials"
-scp \
-    "${SOURCE_DIR}/client_secret.json" \
-    "${SOURCE_DIR}/token.json" \
-    "${REMOTE_HOST}:${REMOTE_CREDENTIAL_DIR}/"
+echo "Copying credentials"
+SOURCE_FILES=()
+REMOTE_FILES=()
+for file in "${CREDENTIAL_FILES[@]}"; do
+    SOURCE_FILES+=("${SOURCE_DIR}/${file}")
+    REMOTE_FILES+=("${REMOTE_CREDENTIAL_DIR}/${file}")
+done
+scp "${SOURCE_FILES[@]}" "${REMOTE_HOST}:${REMOTE_CREDENTIAL_DIR}/"
 
-ssh "${REMOTE_HOST}" chmod 600 \
-    "${REMOTE_CREDENTIAL_DIR}/client_secret.json" \
-    "${REMOTE_CREDENTIAL_DIR}/token.json"
+ssh "${REMOTE_HOST}" chmod 600 "${REMOTE_FILES[@]}"
 
 echo "Credentials copied to ${REMOTE_HOST}:${REMOTE_CREDENTIAL_DIR}/"

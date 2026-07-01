@@ -3,3 +3,4 @@ google-auth-oauthlib
 gspread
 numpy
 openpyxl
+python-telegram-bot>=22,<23

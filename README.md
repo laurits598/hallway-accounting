@@ -127,6 +127,37 @@ The integration currently expects `client_secret.json` and `token.json` under `a
 
 Credential files contain secrets and should not be committed or shared. The existing local credential files are deployment-specific.
 
+## Telegram balance bot
+
+Create a bot with BotFather, revoke any token that has previously been placed
+directly in source code, and save the current token as a single line in:
+
+```text
+app/backend/telegram_bot_token.txt
+```
+
+The file is excluded from Git. Transfer credentials and install both services:
+
+```bash
+./scripts/copy_credentials.sh lau@legion-server hallway-accounting
+ssh lau@legion-server
+cd ~/hallway-accounting
+./install.sh
+```
+
+Residents register once with `/register 529`, then use `/owe`, `/balance`, or
+ask “how much do I owe?” The bot reports Foodclub, Blue Book, kiosk, and total
+for the current month. Registrations are stored locally in the Git-ignored
+`data/telegram_users.json` file.
+
+Useful service commands:
+
+```bash
+sudo systemctl status kollegianeren-telegram
+journalctl -u kollegianeren-telegram -f
+sudo systemctl restart kollegianeren-telegram
+```
+
 To copy both credential files to another machine over SSH without adding them
 to Git:
 

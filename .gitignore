@@ -6,3 +6,5 @@ __pycache__/
 kollegianeren.db
 app/backend/client_secret.json
 app/backend/token.json
+app/backend/telegram_bot_token.txt
+data/telegram_users.json
