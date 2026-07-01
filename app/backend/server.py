@@ -340,22 +340,26 @@ WEEKDAYS_DA = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "S
 
 
 def _residents_by_room():
-    """Map normalized room -> resident name (from the DB, falling back to seed JSON)."""
+    """Map normalized room -> current resident name.
+
+    The SQLite residents table also contains historical residents imported for
+    accounting.  The current roster used by the frontend lives in the seed
+    file, so it must take precedence when calendar assignments are labelled.
+    Rooms missing from that roster are intentionally left unnamed rather than
+    being labelled with an arbitrary historical occupant from SQLite.
+    """
     out = {}
     try:
-        conn = sqlite3.connect(str(DB_PATH))
-        for name, room in conn.execute("SELECT name, room FROM residents"):
-            out[_normalize_room(room)] = name
-        conn.close()
+        with open(SEED_DIR / "residents.json", encoding="utf-8") as fh:
+            for entry in json.load(fh):
+                if entry.get("active", True) is False:
+                    continue
+                room = _normalize_room(entry.get("room"))
+                if room and entry.get("name"):
+                    out[room] = entry["name"]
     except Exception:
         pass
-    if not out:
-        try:
-            with open(SEED_DIR / "residents.json", encoding="utf-8") as fh:
-                for entry in json.load(fh):
-                    out[_normalize_room(entry.get("room"))] = entry.get("name")
-        except Exception:
-            pass
+
     return out
 
 
