@@ -35,13 +35,16 @@ ENGLISH_MONTHS = {
 
 
 def _foodclub_sheet_names(month, year):
-    """Accepted current and legacy Foodclub worksheet naming conventions."""
-    return [
-        f"Foodclub - {DANISH_MONTHS[month]} {year}",
+    """Accepted Foodclub titles, with the current English format first."""
+    candidates = [
         f"Foodclub - {ENGLISH_MONTHS[month]} {year}",
-        f"Madklub - {DANISH_MONTHS[month]} {year}",
+        f"Foodclub - {DANISH_MONTHS[month]} {year}",
         f"Madklub - {ENGLISH_MONTHS[month]} {year}",
+        f"Madklub - {DANISH_MONTHS[month]} {year}",
     ]
+    # Some month names are identical in both languages. Preserve priority
+    # while avoiding redundant Google worksheet lookups.
+    return list(dict.fromkeys(candidates))
 
 
 def _normalize_room(room):

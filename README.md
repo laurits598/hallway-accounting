@@ -106,13 +106,23 @@ journalctl -u kollegianeren -f
 sudo systemctl restart kollegianeren
 ```
 
+To stop, disable, and remove only the systemd service while preserving the
+repository, virtual environment, credentials, and database:
+
+```bash
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+Run `./install.sh` again whenever you want to recreate and start the service.
+
 The server binds to all interfaces by default, which also makes it reachable from a Windows browser when it runs under WSL. Network accessibility still depends on the host firewall and network configuration.
 
 ## Google Sheets configuration
 
 The integration currently expects `client_secret.json` and `token.json` under `app/backend/` and monthly sheets named as follows:
 
-- Foodclub: `Madklub - <Danish month> <year>`
+- Foodclub: `Foodclub - <English month> <year>` (legacy Danish and `Madklub` titles are also accepted)
 - Blue Book: `<English month> <year> - Blue Book`
 
 Credential files contain secrets and should not be committed or shared. The existing local credential files are deployment-specific.
