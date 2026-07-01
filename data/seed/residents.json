@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Katarina",
+    "room": "525",
+    "image": ""
+  },
+  {
+    "name": "Hesten",
+    "room": "526",
+    "image": "/assets/residents/hesten.png"
+  },
+  {
+    "name": "Maja",
+    "room": "527",
+    "image": "/assets/residents/maja.png"
+  },
+  {
+    "name": "THIT",
+    "room": "528",
+    "image": "/assets/residents/thit.png"
+  },
+  {
+    "name": "Wilma",
+    "room": "529",
+    "image": "/assets/residents/wilma.png"
+  },
+  {
+    "name": "Magnus",
+    "room": "530",
+    "image": "/assets/residents/magnus.png"
+  },
+  {
+    "name": "Carl",
+    "room": "531",
+    "image": ""
+  },
+  {
+    "name": "Albani",
+    "room": "532",
+    "image": "/assets/residents/albani.png"
+  },
+  {
+    "name": "Ottar",
+    "room": "533",
+    "image": "/assets/residents/ottar.png"
+  },
+  {
+    "name": "Dypper",
+    "room": "534",
+    "image": "/assets/residents/dypper.png"
+  },
+  {
+    "name": "Mommy",
+    "room": "535",
+    "image": "/assets/residents/mommy.png"
+  },
+  {
+    "name": "Razmuz",
+    "room": "536",
+    "image": "/assets/residents/razmuz.png"
+  },
+  {
+    "name": "Katrine",
+    "room": "539",
+    "image": "/assets/residents/katrine.png"
+  },
+  {
+    "name": "Sekseren",
+    "room": "540",
+    "image": "/assets/residents/sekseren.png"
+  },
+  {
+    "name": "Lea",
+    "room": "541",
+    "image": "/assets/residents/lea.png"
+  },
+  {
+    "name": "Heksehylet",
+    "room": "542",
+    "image": "/assets/residents/heksehylet.png"
+  },
+  {
+    "name": "Oliver",
+    "room": "543",
+    "image": ""
+  },
+  {
+    "name": "Kidd",
+    "room": "544",
+    "image": "/assets/residents/kidd.png"
+  },
+  {
+    "name": "Kragen",
+    "room": "545",
+    "image": "/assets/residents/kragen.png"
+  },
+  {
+    "name": "Tissan",
+    "room": "546",
+    "image": "/assets/residents/tissan.png"
+  }
+]

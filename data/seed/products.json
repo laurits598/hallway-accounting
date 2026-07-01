@@ -1,0 +1,92 @@
+[
+  {
+    "name": "Ale 16",
+    "retail_price": "10.25",
+    "price": "10.25",
+    "image": ""
+  },
+  {
+    "name": "Pepsi/Faxe Kondi/Squash/Cola",
+    "retail_price": "",
+    "price": "5.7",
+    "image": "/assets/products/pepsi-faxe-kondi-squash-cola.png"
+  },
+  {
+    "name": "Albani IPA",
+    "retail_price": "",
+    "price": "7.2",
+    "image": ""
+  },
+  {
+    "name": "TuborgTwist",
+    "retail_price": "4",
+    "price": "5.4",
+    "image": "/assets/products/tuborgtwist.png"
+  },
+  {
+    "name": "T Classic",
+    "retail_price": "4.37",
+    "price": "7.08",
+    "image": ""
+  },
+  {
+    "name": "Sport-Cola",
+    "retail_price": "",
+    "price": "7",
+    "image": "/assets/products/sport-cola.png"
+  },
+  {
+    "name": "Cocio",
+    "retail_price": "",
+    "price": "11.5",
+    "image": ""
+  },
+  {
+    "name": "Danskvand på dåse",
+    "retail_price": "3.5",
+    "price": "5.5",
+    "image": "/assets/products/danskvand-p-d-se.png"
+  },
+  {
+    "name": "Maté Maté",
+    "retail_price": "",
+    "price": "11",
+    "image": ""
+  },
+  {
+    "name": "Gazoz",
+    "retail_price": "",
+    "price": "6.5",
+    "image": ""
+  },
+  {
+    "name": "Danskvand",
+    "retail_price": "5.25",
+    "price": "6.5",
+    "image": "/assets/products/danskvand.png"
+  },
+  {
+    "name": "Coca Cola",
+    "retail_price": "8.5",
+    "price": "8.5",
+    "image": "/assets/products/coca-cola.png"
+  },
+  {
+    "name": "Wiibroe Pils",
+    "retail_price": "3.47",
+    "price": "5.7",
+    "image": ""
+  },
+  {
+    "name": "GuldDAME",
+    "retail_price": "",
+    "price": "11.3",
+    "image": "/assets/products/gulddame.png"
+  },
+  {
+    "name": "CAPRI",
+    "retail_price": "3.5",
+    "price": "3.5",
+    "image": "/assets/products/capri.png"
+  }
+]

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kollegianeren</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="app-frame">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">K</div>
+      <div class="brand-text">
+        <span class="brand-name">Kollegianeren</span>
+        <span class="brand-sub">Internt regnskab</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <span class="topbar-chip">Beta</span>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <nav id="sidebar-nav" class="sidebar-nav" aria-label="Navigation"></nav>
+      </aside>
+
+      <main class="content">
+        <section id="app" class="page"></section>
+      </main>
+    </div>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

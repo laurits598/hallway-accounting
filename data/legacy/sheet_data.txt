@@ -1,0 +1,61 @@
+1	 	 						Important: Before you close the sheet, move the cursor to a different field, such that the spreadsheet is saved											Day	1	Month	6	Year	2026									
+																																	
+	Foodclub	May																															
+						Antal gange som deltager i madklub:				11	9	7	7	7	10	6	1	3	9	8	7	12	13	15	8	16	8	9	6				
+	Date		Calender	Small teddy	Chef	Menu	40 KR?	Closing time	Dinner time	Katarina(25)	Martin (26)	Maja (27)	Thit (28)	Wilma (29)	Magnus (30)	Carl (31)	Laurits (32)	Ottar (33)	Jakob (34)	Amalie (35)	Rasmus (36)	Kat (39)	Niels (40)	Lea (41)	Thomas (42)	Oliver (43)	Rebecca
+(44)	Caro  (45)	Jacob (46)	Total	Closed?	Price	Price pp.
+2	Monday d.	1. June	Gangmøde 		36	Hot dog🌭		13	18	2	v				1				1		1		1			1		V	1	10		280	28.00
+3	Tuesday d.	2. June			26	Linguini i cremet svampesauce og spidskålssalat med avocadodressing 🍝🍄🥬🥑		15	19	V	1		1		1	1				1			1		1			2		10	x	345	34.50
+4	Wednesday d.	3. June			31	Halloumi i karry, a la Carls far		16	19		v					1						1	1	1		1		V		7		207.82	29.69
+5	Thursday d.	4. June			28	Fish tacos til alle Baddies der ikke er til Distortion 🌮🐟 AFLYST		14	19				1										2							3	x		0.00
+6	Friday d.	5. June																												0			0.00
+7	Saturday d.	6. June																												0			0.00
+1	Sunday d.	7. June			25	Pasta pesto🌱🧀		14:30	19	1		1		1		1					1	1		1		1	1			9	x	315	35.00
+2	Monday d.	8. June			27	Cremet pasta ala Maja med flutes og hvidløgsmør 		15	19	V	V	1										1			1	1	1		1	8	x	280	35.00
+3	Tuesday d.	9. June			41	Tarteletter		15	19						1				1	2	1	1	1	2						9	x	315	35.00
+4	Wednesday d.	10. June			40	vege shawarma		14	19	2				1	1	1		1			1		3	1		1				12	X	365	30.42
+5	Thursday d.	11. June			46	Tortellini med grønt, ost, nødder og kylling		15	19			1				1							1	1		1			1	6		219	36.50
+6	Friday d.	12. June																												0			0.00
+7	Saturday d.	13. June																												0			0.00
+1	Sunday d.	14. June			45	halloumi bowl <33333 		15.01	19.01		v			1								1		2			1	2		8		280	35.00
+2	Monday d.	15. June			44	Banh mi med teriyaki-tofu, syltet grønt og sygt meget koriander 💚😈		15	19		v			1	1					1	1	1				1	2			9	X	293	32.56
+3	Tuesday d.	16. June	💔 Amalies sidste mk 💔		35	Alt muligt blandet jeg finder på 🥰 måske også en lille dessert? Jeg går nok lidt over budget 💸		12	19		v	1	1		1			1	1	3		1	1			1	1	v		14			0.00
+4	Wednesday d.	17. June			39	shakshuka med hjemmebagt brød				v			1	1	1	1						1		1	1	1	1		1	11	X	364	33.09
+5	Thursday d.	18. June			42	Loaded fries 		15	19			1										1		1	1	1				5		190	38.00
+6	Friday d.	19. June																												0			0.00
+7	Saturday d.	20. June	Sankt Hans fest																											0			0.00
+1	Sunday d.	21. June	🇩🇰Thit 🇩🇰		34	Folket har talt: LASAGNEEE!! Måske med kød, hvis budgettet er til det		15	19										2			1		1	1	1				6	x	210	35.00
+2	Monday d.	22. June			29	Focaccia sandwichessssss							1	1								1	1			1	1			6		210	35.00
+3	Tuesday d.	23. June	Ægte Sankt Hans		30	Et eller andet sommerligt ☀️							1		2				2				1	1	1				1	9			0.00
+4	Wednesday d.	24. June	🇩🇰Rebecca🇩🇰		43	tunpasta AFLYST		15	19																	1				1	x		0.00
+5	Thursday d.	25. June			42	pizza		15	19	v	v								1			1		2	1	1				8	x	270	33.75
+6	Friday d.	26. June																												0			0.00
+7	Saturday d.	27. June	ROSKILDEEEE																											0			0.00
+1	Sunday d.	28. June	ROSKILDEEEE																											0			0.00
+2	Monday d.	29. June	ROSKILDEEEE																											0			0.00
+3	Tuesday d.	30. June	ROSKILDEEEE																											0			0.00
+4	Wednesday d.	1. July	ROSKILDEEEE																											0			0.00
+																														0			0.00
+																																	
+																																	
+Ekstra madklubber:																														0			0.00
+		Kaffeklub								1	1	1	1	1	1		1	1	1	1	1				1	1		1	1	15			0.00
+		Predrinks til distortion			27					1		1									1			1		1		1		6		163	27.17
+																														0			0.00
+																														0			0.00
+																														0			0.00
+																														0			0.00
+																																	
+																																	
+																																	
+																																	
+																																	
+																																	
+																																	
+																														0			0.00
+										25	26	27	28	29	30	31	32	33	34	35	36	39	40	41	42	43	44	45	46				
+										Katarina(25)	Martin (26)	Maja (27)	Thit (28)	Wilma (29)	Magnus (30)	Carl (31)	Laurits (32)	Ottar (33)	Jakob (34)	Amalie (35)	Rasmus (36)	Kat (39)	Niels (40)	Lea (41)	Thomas (42)	Oliver (43)	Rebecca
+(44)	Caro  (45)	Jacob (46)				
+	Other people's expenditures for you this month:									315	228	172	103	201	194	199	0	30	167	137	188	377	290	472	209	429	238	224	133			4306.82	
+	Your expenditures for foodclub this month:									315	345	443	0	210	0	208	0	0	210	0	280	364	365	315	460	0	293	280	219	tjek			
+	Your foodclub balance (will be transfered to the hallway accounting in the of the month):									0	-117	-271	103	-9	194	-9	0	30	-43	137	-92	13	-75	157	-251	429	-55	-56	-86	0			

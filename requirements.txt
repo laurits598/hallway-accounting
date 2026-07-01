@@ -1,0 +1,5 @@
+google-auth
+google-auth-oauthlib
+gspread
+numpy
+openpyxl

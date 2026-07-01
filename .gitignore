@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+
+# Runtime data and credentials
+kollegianeren.db
+app/backend/client_secret.json
+app/backend/token.json

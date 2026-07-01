@@ -1,0 +1,1 @@
+"""Kollegianeren backend package."""

@@ -1,0 +1,1 @@
+"""Kollegianeren application package."""
