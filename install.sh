@@ -57,19 +57,54 @@ run_as_service_user "${VENV_DIR}/bin/python" -m pip install --upgrade pip
 run_as_service_user "${VENV_DIR}/bin/python" -m pip install -r "${PROJECT_DIR}/requirements.txt"
 
 if [[ -f "${DB_PATH}" ]]; then
-    echo "Existing database found; it will not be recreated."
-    run_as_service_user "${VENV_DIR}/bin/python" - "${DB_PATH}" <<'PY'
+    echo "Existing database found; checking integrity and schema."
+    DB_STATE="$(run_as_service_user "${VENV_DIR}/bin/python" - "${DB_PATH}" <<'PY'
 import sqlite3
 import sys
 
 db_path = sys.argv[1]
 connection = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
 result = connection.execute("PRAGMA quick_check").fetchone()[0]
-connection.close()
 if result != "ok":
     raise SystemExit(f"SQLite integrity check failed: {result}")
-print("SQLite integrity check: ok")
+
+tables = {
+    row[0]
+    for row in connection.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+    )
+}
+connection.close()
+
+required = {"products", "residents", "purchases"}
+if not tables:
+    print("empty")
+elif required <= tables:
+    print("ready")
+else:
+    missing = ", ".join(sorted(required - tables))
+    print(f"incomplete:{missing}")
 PY
+    )"
+
+    case "${DB_STATE}" in
+        empty)
+            echo "Database is empty; initializing it from the seed data."
+            run_as_service_user "${VENV_DIR}/bin/python" "${PROJECT_DIR}/scripts/setup_db.py"
+            ;;
+        ready)
+            echo "SQLite integrity and required tables: ok"
+            ;;
+        incomplete:*)
+            echo "Existing database has an incomplete schema (missing ${DB_STATE#incomplete:})." >&2
+            echo "Refusing to overwrite a partially initialized database." >&2
+            exit 1
+            ;;
+        *)
+            echo "Unexpected database validation result: ${DB_STATE}" >&2
+            exit 1
+            ;;
+    esac
 else
     echo "No database found; initializing it from the seed data."
     run_as_service_user "${VENV_DIR}/bin/python" "${PROJECT_DIR}/scripts/setup_db.py"
