@@ -213,6 +213,17 @@ def update_small_teddy_check(date_str, checked):
     _write_small_teddy_rows(rows)
 
 
+def clear_small_teddy_month(month, year):
+    """Remove all Small Teddy entries for one month and return their count."""
+    prefix = f"{year:04d}-{month:02d}-"
+    rows = _read_small_teddy_rows()
+    remaining = [row for row in rows if not row.get("date", "").startswith(prefix)]
+    removed = len(rows) - len(remaining)
+    if removed:
+        _write_small_teddy_rows(remaining)
+    return removed
+
+
 def _kiosk_fallback(month, year):
     """Fallback kiosk summary straight from SQLite.
 

@@ -53,6 +53,28 @@ def from_template(title, template_name=ROOT_TEMPLATE_FOODCLUB):
     return template_sheet
 
 
+def delete_month_sheets(month, year):
+    """Delete the Foodclub and Blue Book sheets generated for a month.
+
+    Missing sheets are ignored so reset can safely be run more than once.
+    Returns the titles that were actually deleted.
+    """
+    month_name = MONTHS[month]
+    target_titles = {
+        f"Foodclub - {month_name} {year}",
+        f"{month_name} {year} - Blue Book",
+    }
+    spreadsheet = get_client().open_by_url(SHEET_URL)
+    worksheets = {worksheet.title: worksheet for worksheet in spreadsheet.worksheets()}
+    deleted = []
+    for title in sorted(target_titles):
+        worksheet = worksheets.get(title)
+        if worksheet is not None:
+            spreadsheet.del_worksheet(worksheet)
+            deleted.append(title)
+    return deleted
+
+
 def short_room(room):
     return str(room)[1:]
 
