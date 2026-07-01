@@ -127,6 +127,17 @@ The integration currently expects `client_secret.json` and `token.json` under `a
 
 Credential files contain secrets and should not be committed or shared. The existing local credential files are deployment-specific.
 
+To copy both credential files to another machine over SSH without adding them
+to Git:
+
+```bash
+./scripts/copy_credentials.sh lau@legion-server hallway-accounting
+```
+
+The second argument is the repository directory relative to the remote user's
+home directory and defaults to `hallway-accounting`. The script creates the
+remote `app/backend` directory and restricts both files to mode `600`.
+
 ## Widgy feed
 
 Today's Foodclub data is available at:
