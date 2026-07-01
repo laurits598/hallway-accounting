@@ -1,6 +1,7 @@
 import argparse
 
 from app.backend.server import clear_small_teddy_month, generate_next_small_teddy_month
+from app.backend.telegram_notifications import send_monthly_balances
 from scripts import monthly_summary, sheet_handler
 
 '''
@@ -25,6 +26,15 @@ def run_test():
 
     # Generate the next small teddy month schedule
     generate_next_small_teddy_month()
+
+    # Notify registered residents about the accounting month used by this test.
+    delivery = send_monthly_balances(monthly_summary.MONTH, monthly_summary.YEAR)
+    print(
+        f"Telegram balances: {delivery['sent']} sent, "
+        f"{delivery['failed']} failed."
+    )
+    for error in delivery["errors"]:
+        print(f"Telegram delivery failed: {error}")
 
 
 def reset_test():

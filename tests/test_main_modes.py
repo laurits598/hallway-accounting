@@ -24,6 +24,19 @@ class MainModesTest(unittest.TestCase):
         delete_sheets.assert_called_once_with(7, 2026)
         clear_teddy.assert_called_once_with(7, 2026)
 
+    @patch.object(main, "send_monthly_balances", return_value={"sent": 2, "failed": 0, "errors": []})
+    @patch.object(main, "generate_next_small_teddy_month")
+    @patch.object(main.monthly_summary, "main")
+    @patch.object(main.sheet_handler, "main")
+    def test_test_mode_broadcasts_the_accounting_month(
+        self, generate_sheets, accounting, generate_teddy, send_balances
+    ):
+        main.main(["--test"])
+        generate_sheets.assert_called_once_with()
+        accounting.assert_called_once_with()
+        generate_teddy.assert_called_once_with()
+        send_balances.assert_called_once_with(main.monthly_summary.MONTH, main.monthly_summary.YEAR)
+
 
 class ClearSmallTeddyMonthTest(unittest.TestCase):
     def test_only_target_month_is_removed(self):
