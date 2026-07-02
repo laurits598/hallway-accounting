@@ -150,6 +150,17 @@ ask “how much do I owe?” The bot reports Foodclub, Blue Book, kiosk, and tot
 for the current month. Registrations are stored locally in the Git-ignored
 `data/telegram_users.json` file.
 
+`/help` lists all bot commands. `/foodclub` shows today's dish, chef, and the
+number of residents with a non-empty signup cell in today's Foodclub row.
+Registered residents can sign up or change their signup value with either:
+
+```text
+/attend V
+/foodclub attend V
+```
+
+The accepted values are `V`, `G`, or a number from 1 to 20.
+
 Registered residents can also add an expense to the first free slot in their
 row of the current month's Blue Book sheet:
 

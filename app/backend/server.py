@@ -423,8 +423,13 @@ def _foodclub_schedule_from_sheet(data, month):
         day = int(match.group(1))
         chef = str(row[5]).strip()
         menu = str(row[6]).strip()
-        if chef or menu:
-            schedule[day] = {"room": chef, "menu": menu}
+        signup_count = sum(1 for value in row[10:30] if str(value).strip())
+        if chef or menu or signup_count:
+            schedule[day] = {
+                "room": chef,
+                "menu": menu,
+                "signupCount": signup_count,
+            }
     return schedule
 
 
@@ -453,7 +458,12 @@ def build_calendar(month, year):
         entry = foodclub_schedule.get(day)
         if entry:
             room = _normalize_room(entry.get("room"))
-            foodclub = {"room": room, "name": names.get(room), "menu": entry.get("menu") or ""}
+            foodclub = {
+                "room": room,
+                "name": names.get(room),
+                "menu": entry.get("menu") or "",
+                "signupCount": entry.get("signupCount", 0),
+            }
 
         small_teddy = None
         teddy_entry = teddy_schedule.get(day)
@@ -494,6 +504,7 @@ def build_foodclub_widget_payload(target_date):
         "foodclubName": foodclub.get("name") if foodclub else "",
         "foodclubRoom": foodclub.get("room") if foodclub else "",
         "menu": foodclub.get("menu") if foodclub else "",
+        "signupCount": foodclub.get("signupCount", 0) if foodclub else 0,
         "sources": cal.get("sources", {}),
         "errors": cal.get("errors", {}),
         "generatedAt": datetime.now().isoformat(),

@@ -9,8 +9,8 @@ from zoneinfo import ZoneInfo
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 
-from app.backend.server import build_accounting_summary
-from app.backend.google_sheets import insert_bluebook_expense
+from app.backend.server import build_accounting_summary, build_foodclub_widget_payload
+from app.backend.google_sheets import insert_bluebook_expense, set_foodclub_attendance
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -66,9 +66,19 @@ def read_bot_token():
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await help_command(update, context)
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text(
-        "Register your room once with /register 529.\n"
-        "Then use /owe or /balance to see what you owe for the current month."
+        "Available commands:\n\n"
+        "/register 529 — link your Telegram account to a room\n"
+        "/owe or /balance — current month's accounting balance\n"
+        "/foodclub — today's dish and signup count\n"
+        "/attend V or /foodclub attend V — sign up with V, G, or a number\n"
+        "/bluebook — format for adding a Blue Book expense\n"
+        "/bluebook Description | Amount — add an expense\n"
+        "/help — show this command list"
     )
 
 
@@ -175,6 +185,70 @@ async def bluebook(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def foodclub(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.args and context.args[0].casefold() == "attend":
+        await attend(update, context, context.args[1:])
+        return
+    today = datetime.now(ZoneInfo("Europe/Copenhagen"))
+    try:
+        payload = await asyncio.to_thread(build_foodclub_widget_payload, today)
+    except Exception as exc:
+        print(f"[TELEGRAM] Foodclub lookup failed: {exc}")
+        await update.effective_message.reply_text("I could not load today's Foodclub data.")
+        return
+
+    if not payload.get("hasFoodclub"):
+        await update.effective_message.reply_text(
+            f"No Foodclub is listed for {payload['displayDate']}."
+        )
+        return
+
+    dish = payload.get("menu") or "No dish has been entered yet."
+    chef = payload.get("foodclubName") or (
+        f"Room {payload['foodclubRoom']}" if payload.get("foodclubRoom") else "Not assigned"
+    )
+    await update.effective_message.reply_text(
+        f"Foodclub · {payload['displayDate']}\n"
+        f"Dish: {dish}\n"
+        f"Chef: {chef}\n"
+        f"Signed up: {payload.get('signupCount', 0)}"
+    )
+
+
+def parse_attendance(args):
+    if len(args) != 1:
+        raise ValueError("Use /attend V, /attend G, or /attend 1")
+    value = args[0].strip().upper()
+    if value in {"V", "G"}:
+        return value
+    if value.isdigit() and 1 <= int(value) <= 20:
+        return str(int(value))
+    raise ValueError("Attendance must be V, G, or a number from 1 to 20.")
+
+
+async def attend(update: Update, context: ContextTypes.DEFAULT_TYPE, args=None):
+    room = load_registrations().get(str(update.effective_user.id))
+    if not room:
+        await update.effective_message.reply_text("Register your room first: /register 529")
+        return
+    try:
+        attendance = parse_attendance(context.args if args is None else args)
+        today = datetime.now(ZoneInfo("Europe/Copenhagen")).date()
+        result = await asyncio.to_thread(
+            set_foodclub_attendance, room, attendance, today
+        )
+    except Exception as exc:
+        print(f"[TELEGRAM] Foodclub attendance failed: {exc}")
+        await update.effective_message.reply_text(f"Could not update attendance: {exc}")
+        return
+
+    changed = f" (replaced {result['previous']})" if result["previous"] else ""
+    await update.effective_message.reply_text(
+        f"Added room {room} to Foodclub with {attendance}{changed}.\n"
+        f"Signed up now: {result['signupCount']}"
+    )
+
+
 async def text_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (update.effective_message.text or "").casefold()
     if any(word in text for word in ("owe", "balance", "skylder", "saldo")):
@@ -186,9 +260,12 @@ async def text_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     application = ApplicationBuilder().token(read_bot_token()).build()
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("register", register))
     application.add_handler(CommandHandler(["owe", "balance"], balance))
     application.add_handler(CommandHandler("bluebook", bluebook))
+    application.add_handler(CommandHandler("foodclub", foodclub))
+    application.add_handler(CommandHandler("attend", attend))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_question))
     application.run_polling()
 

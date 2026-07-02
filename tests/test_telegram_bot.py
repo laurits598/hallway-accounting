@@ -23,6 +23,13 @@ class TelegramBotTest(unittest.TestCase):
             ("Flour and oil", 123.45),
         )
 
+    def test_parses_foodclub_attendance(self):
+        self.assertEqual(telegram_bot.parse_attendance(["v"]), "V")
+        self.assertEqual(telegram_bot.parse_attendance(["G"]), "G")
+        self.assertEqual(telegram_bot.parse_attendance(["02"]), "2")
+        with self.assertRaises(ValueError):
+            telegram_bot.parse_attendance(["no"])
+
     def test_registration_is_persisted_by_telegram_user(self):
         with tempfile.TemporaryDirectory() as directory:
             registrations = Path(directory) / "telegram_users.json"

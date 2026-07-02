@@ -6,9 +6,11 @@ from app.backend import google_sheets
 
 
 class FakeWorksheet:
-    def __init__(self, values):
+    def __init__(self, values, title="July 2026 - Blue Book"):
         self.values = values
+        self.title = title
         self.updates = []
+        self.cell_updates = []
 
     def get(self, cell_range):
         self.requested_range = cell_range
@@ -16,6 +18,9 @@ class FakeWorksheet:
 
     def batch_update(self, updates):
         self.updates.extend(updates)
+
+    def update(self, cell, values):
+        self.cell_updates.append((cell, values))
 
 
 class FakeSpreadsheet:
@@ -25,6 +30,9 @@ class FakeSpreadsheet:
     def worksheet(self, title):
         self.requested_title = title
         return self.fake_worksheet
+
+    def worksheets(self):
+        return [self.fake_worksheet]
 
 
 class FakeClient:
@@ -65,6 +73,26 @@ class BluebookInsertTest(unittest.TestCase):
             )
         self.assertEqual(result["slot"], 2)
         self.assertEqual(worksheet.updates[0]["range"], "E5:G5")
+
+
+class FoodclubAttendanceTest(unittest.TestCase):
+    def test_sets_registered_room_on_requested_day_and_counts_signups(self):
+        values = [[""] for _ in range(6)]
+        values[4] = [""] * 30
+        values[4][10] = "Kata (25)"
+        values[5] = [""] * 30
+        values[5][2] = "2. July"
+        values[5][11] = "1"
+        worksheet = FakeWorksheet(values, "Foodclub - July 2026")
+        spreadsheet = FakeSpreadsheet(worksheet)
+        with patch.object(google_sheets, "get_client", return_value=FakeClient(spreadsheet)):
+            result = google_sheets.set_foodclub_attendance(
+                "525", "V", date(2026, 7, 2)
+            )
+
+        self.assertEqual(worksheet.cell_updates, [("K6", [["V"]])])
+        self.assertEqual(result["signupCount"], 2)
+        self.assertEqual(result["previous"], "")
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import os
 import gspread
 import re
 from datetime import date
+from gspread.utils import rowcol_to_a1
 from pathlib import Path
 
 from google.auth.transport.requests import Request
@@ -71,6 +72,10 @@ ENGLISH_MONTHS = {
     1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
     7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December",
 }
+DANISH_MONTHS = {
+    1: "Januar", 2: "Februar", 3: "Marts", 4: "April", 5: "Maj", 6: "Juni",
+    7: "Juli", 8: "August", 9: "September", 10: "Oktober", 11: "November", 12: "December",
+}
 
 
 def insert_bluebook_expense(room, description, amount, expense_date=None):
@@ -115,6 +120,76 @@ def insert_bluebook_expense(room, description, amount, expense_date=None):
             }
 
     raise ValueError(f"Room {room} already uses all three expense slots in {title}")
+
+
+def set_foodclub_attendance(room, attendance, attendance_date=None):
+    """Set a registered resident's attendance value for one Foodclub date."""
+    attendance_date = attendance_date or date.today()
+    room = str(room).strip()
+    short_room = room[1:] if len(room) == 3 and room.startswith("5") else room
+    titles = list(dict.fromkeys([
+        f"Foodclub - {ENGLISH_MONTHS[attendance_date.month]} {attendance_date.year}",
+        f"Foodclub - {DANISH_MONTHS[attendance_date.month]} {attendance_date.year}",
+        f"Madklub - {ENGLISH_MONTHS[attendance_date.month]} {attendance_date.year}",
+        f"Madklub - {DANISH_MONTHS[attendance_date.month]} {attendance_date.year}",
+    ]))
+
+    spreadsheet = get_client().open_by_url(SHEET_URL)
+    worksheets = {worksheet.title.casefold(): worksheet for worksheet in spreadsheet.worksheets()}
+    worksheet = next(
+        (worksheets[title.casefold()] for title in titles if title.casefold() in worksheets),
+        None,
+    )
+    if worksheet is None:
+        raise ValueError(f"No Foodclub sheet found for {attendance_date:%m/%Y}")
+
+    values = worksheet.get("A1:AD36")
+    if len(values) < 5:
+        raise ValueError(f"Foodclub sheet {worksheet.title} has no resident header")
+    header = list(values[4]) + [""] * (30 - len(values[4]))
+    resident_column = next(
+        (
+            index for index, label in enumerate(header[10:30], start=10)
+            if (match := re.search(r"\((\d+)\)", str(label))) and match.group(1) == short_room
+        ),
+        None,
+    )
+    if resident_column is None:
+        raise ValueError(f"Room {room} was not found in {worksheet.title}")
+
+    target_row = None
+    row_values = None
+    month_names = {ENGLISH_MONTHS[attendance_date.month].casefold(), DANISH_MONTHS[attendance_date.month].casefold()}
+    date_pattern = re.compile(r"(\d{1,2})\s*\.\s*([A-Za-z]+)")
+    for index, row in enumerate(values[5:], start=6):
+        date_cell = str(row[2] if len(row) > 2 else "")
+        match = date_pattern.search(date_cell)
+        if (
+            match
+            and int(match.group(1)) == attendance_date.day
+            and match.group(2).casefold() in month_names
+        ):
+            target_row = index
+            row_values = list(row) + [""] * (30 - len(row))
+            break
+    if target_row is None:
+        raise ValueError(f"No Foodclub row found for {attendance_date:%Y-%m-%d}")
+
+    previous = str(row_values[resident_column]).strip()
+    worksheet.update(rowcol_to_a1(target_row, resident_column + 1), [[attendance]])
+    signup_count = sum(
+        1
+        for index, value in enumerate(row_values[10:30], start=10)
+        if str(attendance if index == resident_column else value).strip()
+    )
+    return {
+        "sheet": worksheet.title,
+        "room": room,
+        "date": attendance_date.isoformat(),
+        "attendance": attendance,
+        "previous": previous,
+        "signupCount": signup_count,
+    }
 
 
 #if __name__ == "__main__":
