@@ -129,9 +129,10 @@ Menu start: G6
 
 '''
 
-def init():
-    year_int = datetime.date.today().year
-    month_int = datetime.date.today().month
+def init(year=None, month=None):
+    today = datetime.date.today()
+    year_int = year or today.year
+    month_int = month or today.month
     sheet_title_bb = f"{MONTHS[month_int]} {year_int} - Blue Book"
     from_template(sheet_title_bb, template_name="BB_Template_26")
     print(MONTHS[month_int] + " " + str(year_int))
@@ -149,15 +150,15 @@ def init():
     
     populate_foodclub(
         worksheet=worksheet,
-        year=2026,
-        month=7,
+        year=year_int,
+        month=month_int,
         rooms=[str(room) for room in range(525, 548)],
         wishes=[("532", 5), ("533", 6)],
     )
 
 
-def main():
-    init()
+def main(year=None, month=None):
+    init(year, month)
 
 
 if __name__ == "__main__":

@@ -116,6 +116,13 @@ chmod +x uninstall.sh
 
 Run `./install.sh` again whenever you want to recreate and start the service.
 
+To regenerate and populate only the current month's Foodclub calendar sheet
+without running accounting, Telegram broadcasts, or Small Teddy generation:
+
+```bash
+.venv/bin/python main.py --kalender-refresh
+```
+
 The server binds to all interfaces by default, which also makes it reachable from a Windows browser when it runs under WSL. Network accessibility still depends on the host firewall and network configuration.
 
 ## Google Sheets configuration

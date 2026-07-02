@@ -57,12 +57,22 @@ def reset_test():
     print(f"Removed {removed_teddy_rows} Small Teddy rows for July 2026.")
 
 
+def refresh_calendar():
+    sheet_handler.main()
+    print("Current Foodclub calendar sheet has been generated and populated.")
+
+
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="Run monthly accounting or the July 2026 test workflow.")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--test", action="store_true", help="generate sheets, summary, and Small Teddy schedule")
     mode.add_argument("--reset", action="store_true", help="delete generated July 2026 sheets and Small Teddy rows")
     mode.add_argument("--month", type=int, metavar="1-12", help="summarize and notify for this month")
+    mode.add_argument(
+        "--kalender-refresh",
+        action="store_true",
+        help="generate and populate the current Foodclub calendar sheet",
+    )
     parser.add_argument("--year", type=int, help="year used with --month")
     args = parser.parse_args(argv)
     if args.month is not None:
@@ -81,6 +91,8 @@ def main(argv=None):
         run_test()
     elif args.reset:
         reset_test()
+    elif args.kalender_refresh:
+        refresh_calendar()
     else:
         run_monthly_accounting(args.month, args.year)
 

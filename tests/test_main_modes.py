@@ -12,6 +12,7 @@ class MainModesTest(unittest.TestCase):
     def test_modes_are_mutually_exclusive_and_required(self):
         self.assertTrue(main.parse_args(["--test"]).test)
         self.assertTrue(main.parse_args(["--reset"]).reset)
+        self.assertTrue(main.parse_args(["--kalender-refresh"]).kalender_refresh)
         selected = main.parse_args(["--month", "2", "--year", "2026"])
         self.assertEqual((selected.month, selected.year), (2, 2026))
         with self.assertRaises(SystemExit):
@@ -49,6 +50,11 @@ class MainModesTest(unittest.TestCase):
         main.main(["--month", "2", "--year", "2026"])
         accounting.assert_called_once_with(2, 2026)
         send_balances.assert_called_once_with(2, 2026)
+
+    @patch.object(main.sheet_handler, "main")
+    def test_calendar_refresh_only_populates_foodclub_sheet(self, generate_sheet):
+        main.main(["--kalender-refresh"])
+        generate_sheet.assert_called_once_with()
 
 
 class ClearSmallTeddyMonthTest(unittest.TestCase):
