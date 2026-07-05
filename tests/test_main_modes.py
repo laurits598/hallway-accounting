@@ -78,5 +78,20 @@ class ClearSmallTeddyMonthTest(unittest.TestCase):
             self.assertEqual(dates, ["2026-06-30", "2026-08-01"])
 
 
+class SendGangregningTest(unittest.TestCase):
+    @patch("app.backend.telegram_notifications.send_monthly_balances")
+    def test_sends_selected_month(self, send_balances):
+        send_balances.return_value = {"sent": 2, "failed": 0, "errors": []}
+
+        result = server.send_gangregning(6, 2026)
+
+        send_balances.assert_called_once_with(6, 2026)
+        self.assertEqual(result["sent"], 2)
+
+    def test_rejects_invalid_month(self):
+        with self.assertRaisesRegex(ValueError, "Month"):
+            server.send_gangregning(13, 2026)
+
+
 if __name__ == "__main__":
     unittest.main()

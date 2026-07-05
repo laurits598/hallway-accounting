@@ -33,6 +33,7 @@ class TelegramNotificationsTest(unittest.IsolatedAsyncioTestCase):
             "total": 123.5,
         }
         message = telegram_notifications.format_balance(summary, row)
+        self.assertIn("Gangregning", message)
         self.assertIn("Juni 2026", message)
         self.assertIn("Total: 123.50 kr.", message)
 

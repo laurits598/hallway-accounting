@@ -136,12 +136,24 @@ Credential files contain secrets and should not be committed or shared. The exis
 
 ## Telegram balance bot
 
-Create a bot with BotFather, revoke any token that has previously been placed
-directly in source code, and save the current token as a single line in:
+Create one bot per room with BotFather, revoke any token that has previously
+been placed directly in source code, and bind each token to its room in:
 
 ```text
 app/backend/telegram_bot_token.txt
 ```
+
+Use one `ROOM=TOKEN` entry per line. Two-digit rooms are normalized to the
+corresponding fifth-floor room number:
+
+```text
+529=123456:bot-token-for-room-529
+530=234567:bot-token-for-room-530
+```
+
+Restart the Telegram service after changing the file. Each resident opens the
+bot assigned to their room and sends `/start`; no `/register` step is exposed.
+The bot remembers that chat for monthly balance messages.
 
 The file is excluded from Git. Transfer credentials and install both services:
 
@@ -152,9 +164,9 @@ cd ~/hallway-accounting
 ./install.sh
 ```
 
-Residents register once with `/register 529`, then use `/owe`, `/balance`, or
-ask “how much do I owe?” The bot reports Foodclub, Blue Book, kiosk, and total
-for the current month. Registrations are stored locally in the Git-ignored
+Residents use `/owe`, `/balance`, or ask “how much do I owe?” The bot reports
+Foodclub, Blue Book, kiosk, and total for the room bound to that bot. Chat IDs
+for monthly messages are stored locally in the Git-ignored
 `data/telegram_users.json` file.
 
 `/help` lists all bot commands. `/foodclub` shows today's dish, chef, and the

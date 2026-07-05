@@ -64,6 +64,11 @@
       generating: false,
       result: null,
       error: null,
+      gangregningMonth: new Date().getMonth() + 1,
+      gangregningYear: new Date().getFullYear(),
+      sendingGangregning: false,
+      gangregningResult: null,
+      gangregningError: null,
     },
   };
 
@@ -978,6 +983,12 @@
   function renderAdminPage() {
     const a = state.admin;
     const result = a.result;
+    const gangregningMonthOptions = MONTH_NAMES_DA.map(
+      (name, index) => `<option value="${index + 1}" ${a.gangregningMonth === index + 1 ? "selected" : ""}>${name}</option>`
+    ).join("");
+    const gangregningYearOptions = accountingYears()
+      .map((year) => `<option value="${year}" ${a.gangregningYear === year ? "selected" : ""}>${year}</option>`)
+      .join("");
     const countRows = result
       ? Object.entries(result.counts || {})
         .sort((left, right) => left[0].localeCompare(right[0], "da"))
@@ -1002,6 +1013,24 @@
               <div class="admin-result-head">Genereret ${escapeHtml(result.generatedMonth)} · ${result.days} dage</div>
               <div class="admin-copy">Ekstra small teddy pga. manglende afkrydsning: ${result.uncheckedFromPreviousMonth?.length ? escapeHtml(result.uncheckedFromPreviousMonth.join(", ")) : "ingen"}</div>
               <div class="admin-summary">${countRows}</div>
+            </div>
+          ` : ""}
+        </div>
+        <div class="admin-card">
+          <div class="admin-title">Send gangregning</div>
+          <div class="admin-copy">
+            Sender Foodclub, Blue Book, kiosk og den samlede gangregning til de Telegram-chats, der har startet deres værelses bot.
+          </div>
+          <div class="admin-actions">
+            <select class="select-field" data-action="set-gangregning-month" aria-label="Vælg måned">${gangregningMonthOptions}</select>
+            <select class="select-field" data-action="set-gangregning-year" aria-label="Vælg år">${gangregningYearOptions}</select>
+            <button class="primary-button" type="button" data-action="send-gangregning" ${a.sendingGangregning ? "disabled" : ""}>${a.sendingGangregning ? "Sender…" : "Send gangregning"}</button>
+          </div>
+          ${a.gangregningError ? `<div class="admin-error">${escapeHtml(a.gangregningError)}</div>` : ""}
+          ${a.gangregningResult ? `
+            <div class="admin-result">
+              <div class="admin-result-head">Sendt til ${a.gangregningResult.sent} · Fejlet: ${a.gangregningResult.failed}</div>
+              ${a.gangregningResult.errors?.length ? `<div class="admin-copy">${escapeHtml(a.gangregningResult.errors.join(" · "))}</div>` : ""}
             </div>
           ` : ""}
         </div>
@@ -1162,6 +1191,35 @@
       state.admin.result = null;
     } finally {
       state.admin.generating = false;
+      render();
+    }
+  }
+
+  async function sendGangregning() {
+    const a = state.admin;
+    a.sendingGangregning = true;
+    a.gangregningError = null;
+    a.gangregningResult = null;
+    render();
+    try {
+      const response = await fetch("/api/admin/send-gangregning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          month: a.gangregningMonth,
+          year: a.gangregningYear,
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || `Serveren svarede med fejl (${response.status}).`);
+      }
+      a.gangregningResult = payload;
+      showToast(`Gangregning sendt til ${payload.sent}.`);
+    } catch (error) {
+      a.gangregningError = error.message || "Kunne ikke sende gangregning.";
+    } finally {
+      a.sendingGangregning = false;
       render();
     }
   }
@@ -1856,6 +1914,8 @@
       loadCalendar(state.calendar.month, state.calendar.year);
     } else if (action === "generate-small-teddy-next-month") {
       generateSmallTeddyNextMonth();
+    } else if (action === "send-gangregning") {
+      sendGangregning();
     } else if (action === "export-xlsx") {
       exportAccountingXlsx();
     }
@@ -1867,6 +1927,10 @@
       setAccountingMonthYear(Number(event.target.value), state.accounting.year);
     } else if (action === "set-acct-year") {
       setAccountingMonthYear(state.accounting.month, Number(event.target.value));
+    } else if (action === "set-gangregning-month") {
+      state.admin.gangregningMonth = Number(event.target.value);
+    } else if (action === "set-gangregning-year") {
+      state.admin.gangregningYear = Number(event.target.value);
     } else if (action === "toggle-small-teddy") {
       toggleSmallTeddyDone(event.target.getAttribute("data-date"), event.target.checked);
     }

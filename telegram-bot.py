@@ -11,17 +11,12 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Messa
 
 from app.backend.server import build_accounting_summary, build_foodclub_widget_payload
 from app.backend.google_sheets import insert_bluebook_expense, set_foodclub_attendance
+from app.backend.telegram_config import normalize_room, read_bot_configs
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-TOKEN_FILE = PROJECT_ROOT / "app" / "backend" / "telegram_bot_token.txt"
 REGISTRATIONS_FILE = PROJECT_ROOT / "data" / "telegram_users.json"
 RESIDENTS_FILE = PROJECT_ROOT / "data" / "seed" / "residents.json"
-
-
-def normalize_room(room):
-    room = str(room).strip()
-    return f"5{room}" if len(room) == 2 and room.isdigit() else room
 
 
 def active_rooms():
@@ -54,25 +49,19 @@ def save_registration(user_id, room):
     temporary.replace(REGISTRATIONS_FILE)
 
 
-def read_bot_token():
-    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-    if not token and TOKEN_FILE.exists():
-        token = TOKEN_FILE.read_text(encoding="utf-8").strip()
-    if not token:
-        raise RuntimeError(
-            f"Set TELEGRAM_BOT_TOKEN or place the token in {TOKEN_FILE}"
-        )
-    return token
+def configured_room(context):
+    return context.application.bot_data["room"]
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    room = configured_room(context)
+    save_registration(update.effective_chat.id, room)
     await help_command(update, context)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text(
         "Available commands:\n\n"
-        "/register 529 — link your Telegram account to a room\n"
         "/owe or /balance — current month's accounting balance\n"
         "/foodclub — today's dish and signup count\n"
         "/attend V or /foodclub attend V — sign up with V, G, or a number\n"
@@ -105,10 +94,7 @@ def current_balance(room, now=None):
 
 
 async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    room = load_registrations().get(str(update.effective_user.id))
-    if not room:
-        await update.effective_message.reply_text("Register your room first: /register 529")
-        return
+    room = configured_room(context)
 
     try:
         summary, row = await asyncio.to_thread(current_balance, room)
@@ -155,10 +141,7 @@ def parse_bluebook_args(args):
 
 
 async def bluebook(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    room = load_registrations().get(str(update.effective_user.id))
-    if not room:
-        await update.effective_message.reply_text("Register your room first: /register 529")
-        return
+    room = configured_room(context)
     if not context.args:
         await update.effective_message.reply_text(
             "Send the expense like this:\n"
@@ -227,10 +210,7 @@ def parse_attendance(args):
 
 
 async def attend(update: Update, context: ContextTypes.DEFAULT_TYPE, args=None):
-    room = load_registrations().get(str(update.effective_user.id))
-    if not room:
-        await update.effective_message.reply_text("Register your room first: /register 529")
-        return
+    room = configured_room(context)
     try:
         attendance = parse_attendance(context.args if args is None else args)
         today = datetime.now(ZoneInfo("Europe/Copenhagen")).date()
@@ -257,17 +237,47 @@ async def text_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_message.reply_text("Use /owe to see your current balance.")
 
 
-def main():
-    application = ApplicationBuilder().token(read_bot_token()).build()
+def build_application(config):
+    application = ApplicationBuilder().token(config["token"]).build()
+    application.bot_data["room"] = config["room"]
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("register", register))
     application.add_handler(CommandHandler(["owe", "balance"], balance))
     application.add_handler(CommandHandler("bluebook", bluebook))
     application.add_handler(CommandHandler("foodclub", foodclub))
     application.add_handler(CommandHandler("attend", attend))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_question))
-    application.run_polling()
+    return application
+
+
+async def run_bots(configs):
+    applications = [build_application(config) for config in configs]
+    try:
+        for application in applications:
+            await application.initialize()
+            await application.start()
+            await application.updater.start_polling()
+        await asyncio.Event().wait()
+    finally:
+        for application in reversed(applications):
+            if application.updater.running:
+                await application.updater.stop()
+            if application.running:
+                await application.stop()
+            await application.shutdown()
+
+
+def main():
+    configs = read_bot_configs()
+    rooms = active_rooms()
+    unknown_rooms = [config["room"] for config in configs if config["room"] not in rooms]
+    if unknown_rooms:
+        raise RuntimeError(f"Telegram bots reference inactive or unknown rooms: {', '.join(unknown_rooms)}")
+    print(f"[TELEGRAM] Starting {len(configs)} room-bound bot(s).")
+    try:
+        asyncio.run(run_bots(configs))
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":

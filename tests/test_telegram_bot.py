@@ -1,10 +1,13 @@
 import importlib.util
 import json
+import os
 import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
+
+from app.backend import telegram_config
 
 
 SPEC = importlib.util.spec_from_file_location("telegram_bot", Path(__file__).parents[1] / "telegram-bot.py")
@@ -37,6 +40,23 @@ class TelegramBotTest(unittest.TestCase):
                 telegram_bot.save_registration(1234, "529")
                 self.assertEqual(telegram_bot.load_registrations(), {"1234": "529"})
                 self.assertEqual(json.loads(registrations.read_text()), {"1234": "529"})
+
+    def test_reads_multiple_room_bound_tokens(self):
+        with tempfile.TemporaryDirectory() as directory:
+            token_file = Path(directory) / "telegram_bot_token.txt"
+            token_file.write_text("529=first-token\n530=second-token\n", encoding="utf-8")
+            with (
+                patch.dict(os.environ, {}, clear=True),
+                patch.object(telegram_config, "TOKEN_FILE", token_file),
+            ):
+                configs = telegram_bot.read_bot_configs()
+        self.assertEqual(
+            configs,
+            [
+                {"room": "529", "token": "first-token"},
+                {"room": "530", "token": "second-token"},
+            ],
+        )
 
     def test_current_balance_uses_current_month_and_room(self):
         summary = {

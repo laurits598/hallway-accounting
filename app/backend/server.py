@@ -224,6 +224,20 @@ def clear_small_teddy_month(month, year):
     return removed
 
 
+def send_gangregning(month, year):
+    """Send the selected month's combined accounting total through Telegram."""
+    if not 1 <= month <= 12:
+        raise ValueError("Month must be between 1 and 12")
+    if not 2000 <= year <= 2100:
+        raise ValueError("Year must be between 2000 and 2100")
+
+    # Imported lazily because telegram_notifications uses this module's
+    # build_accounting_summary function.
+    from app.backend.telegram_notifications import send_monthly_balances
+
+    return send_monthly_balances(month, year)
+
+
 def _kiosk_fallback(month, year):
     """Fallback kiosk summary straight from SQLite.
 
@@ -695,6 +709,31 @@ class SpaRequestHandler(http.server.SimpleHTTPRequestHandler):
         return super().do_GET()
 
     def do_POST(self):
+        if self.path == "/api/admin/send-gangregning":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length)
+            try:
+                payload = json.loads(body.decode()) if body else {}
+                month = int(payload.get("month"))
+                year = int(payload.get("year"))
+                delivery = send_gangregning(month, year)
+                self.send_response(200)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "status": "ok",
+                    "month": month,
+                    "year": year,
+                    **delivery,
+                }).encode())
+            except Exception as exc:
+                print(f"[ERROR] /api/admin/send-gangregning failed: {exc}")
+                self.send_response(400)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(exc)}).encode())
+            return
+
         if self.path == "/api/admin/generate-small-teddy-next-month":
             try:
                 payload = generate_next_small_teddy_month()

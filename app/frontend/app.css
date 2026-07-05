@@ -1016,6 +1016,14 @@ tfoot .foot-label { color: var(--muted); text-transform: uppercase; letter-spaci
   box-shadow: var(--shadow-sm);
   max-width: 760px;
 }
+.admin-card + .admin-card { margin-top: 16px; }
+.admin-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
 .admin-title {
   font-size: 18px;
   font-weight: 750;
